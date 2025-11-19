@@ -84,4 +84,7 @@ def get_users():
 if __name__ == '__main__':
     # Run the app
     # Use 0.0.0.0 to make it accessible from outside the container
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Debug mode is controlled by FLASK_DEBUG environment variable (defaults to False)
+    # NOTE: This direct execution is only for development. Production uses Gunicorn.
+    debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)
