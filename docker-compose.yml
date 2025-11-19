@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: greencheck-db-dev
+    environment:
+      POSTGRES_DB: greencheck
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./dados.sql:/docker-entrypoint-initdb.d/2-dados.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Aplicação Flask
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: greencheck-app-dev
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: greencheck
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      FLASK_ENV: development
+      FLASK_DEBUG: 1
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    command: python app.py
+
+volumes:
+  postgres_data_dev:
